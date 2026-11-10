@@ -1,18 +1,16 @@
-name: Extract ZIP and Build APK
+name: Build APK from ZIP
 
 on:
   push:
     branches:
       - main
-    paths:
-      - "*.zip"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-from-zip:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,8 +25,8 @@ jobs:
             unzip -o -q "$file" -d "$tmp"
 
             entries=("$tmp"/*)
-            if [ ${#entries[@]} -eq 1 ] && [ -d "${entries[0]}" ]; then
-              src="${entries[0]}"
+            if [ ${#entries[@]} -eq 1 ] && [ -d "${entries}" ]; then
+              src="${entries}"
             else
               src="$tmp"
             fi
@@ -47,12 +45,11 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        with:
+          gradle-version: '8.7'
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
